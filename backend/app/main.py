@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.api.analytics import router as analytics_router
 from app.api.audio import router as audio_router
 from app.api.health import router as health_router
 from app.api.visual import router as visual_router
@@ -77,6 +78,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 app.include_router(health_router)
 app.include_router(audio_router, prefix="/api/v1")
 app.include_router(visual_router, prefix="/api/v1")
+app.include_router(analytics_router, prefix="/api/v1")
 
 
 @app.get("/", response_model=RootResponse, summary="API Root")

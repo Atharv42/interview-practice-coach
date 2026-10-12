@@ -1,6 +1,5 @@
 """Pydantic schemas for visual delivery metrics, landmark tracking, and privacy-first analysis."""
 
-
 from pydantic import BaseModel, Field
 
 
