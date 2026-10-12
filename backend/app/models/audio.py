@@ -1,6 +1,5 @@
 """Pydantic schemas for audio transcription, timestamps, and delivery metrics."""
 
-
 from pydantic import BaseModel, Field
 
 

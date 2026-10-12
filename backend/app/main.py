@@ -10,6 +10,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.audio import router as audio_router
 from app.api.health import router as health_router
+from app.api.visual import router as visual_router
 from app.models.schemas import RootResponse
 
 APP_TITLE = "Interview Practice Coach API"
@@ -75,6 +76,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 # Include modular routers
 app.include_router(health_router)
 app.include_router(audio_router, prefix="/api/v1")
+app.include_router(visual_router, prefix="/api/v1")
 
 
 @app.get("/", response_model=RootResponse, summary="API Root")
