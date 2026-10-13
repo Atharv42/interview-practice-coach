@@ -13,6 +13,12 @@ import {
   VisualAnalysisResponse,
   CoachingEvaluationRequest,
   CoachingEvaluationResponse,
+  CategorySummary,
+  CustomTrackRequest,
+  InterviewQuestion,
+  MockTrackDefinition,
+  MockTrackListResponse,
+  QuestionListResponse,
 } from "../types";
 
 const API_BASE = "";
@@ -172,5 +178,67 @@ export const api = {
     const res = await fetch(`${API_BASE}/api/v1/coaching/sessions/${encodeURIComponent(sessionId)}`);
     return handleResponse<CoachingEvaluationResponse>(res);
   },
+
+  /**
+   * List curated interview questions with optional filtering
+   */
+  async listQuestions(
+    category?: string,
+    difficulty?: string,
+    search?: string
+  ): Promise<QuestionListResponse> {
+    const params = new URLSearchParams();
+    if (category) params.append("category", category);
+    if (difficulty) params.append("difficulty", difficulty);
+    if (search) params.append("search", search);
+    const qs = params.toString();
+    const res = await fetch(`${API_BASE}/api/v1/questions${qs ? `?${qs}` : ""}`);
+    return handleResponse<QuestionListResponse>(res);
+  },
+
+  /**
+   * List available question categories and counts
+   */
+  async listCategories(): Promise<CategorySummary[]> {
+    const res = await fetch(`${API_BASE}/api/v1/questions/categories`);
+    return handleResponse<CategorySummary[]>(res);
+  },
+
+  /**
+   * Get single question by ID
+   */
+  async getQuestion(questionId: string): Promise<InterviewQuestion> {
+    const res = await fetch(`${API_BASE}/api/v1/questions/${encodeURIComponent(questionId)}`);
+    return handleResponse<InterviewQuestion>(res);
+  },
+
+  /**
+   * List pre-configured multi-question mock interview tracks
+   */
+  async listMockTracks(): Promise<MockTrackListResponse> {
+    const res = await fetch(`${API_BASE}/api/v1/questions/tracks/available`);
+    return handleResponse<MockTrackListResponse>(res);
+  },
+
+  /**
+   * Retrieve a specific mock interview track by ID
+   */
+  async getMockTrack(trackId: string): Promise<MockTrackDefinition> {
+    const res = await fetch(`${API_BASE}/api/v1/questions/tracks/${encodeURIComponent(trackId)}`);
+    return handleResponse<MockTrackDefinition>(res);
+  },
+
+  /**
+   * Create a dynamic custom mock interview track
+   */
+  async createCustomMockTrack(payload: CustomTrackRequest): Promise<MockTrackDefinition> {
+    const res = await fetch(`${API_BASE}/api/v1/questions/tracks/custom`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return handleResponse<MockTrackDefinition>(res);
+  },
 };
+
 

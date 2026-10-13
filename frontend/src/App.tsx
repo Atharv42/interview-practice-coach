@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Navbar } from "./components/Navbar";
 import { RecordingStudio } from "./components/RecordingStudio";
+import { MockInterviewStudio } from "./components/MockInterviewStudio";
 import { SessionDetailView } from "./components/SessionDetailView";
 import { SessionHistory } from "./components/SessionHistory";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
@@ -9,7 +10,7 @@ import { api } from "./services/api";
 import "./App.css";
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"studio" | "history" | "analytics">("studio");
+  const [activeTab, setActiveTab] = useState<"studio" | "mock" | "history" | "analytics">("studio");
   const [selectedSession, setSelectedSession] = useState<SessionDetailResponse | null>(null);
   const [isBackendHealthy, setIsBackendHealthy] = useState<boolean | null>(null);
 
@@ -69,6 +70,8 @@ export const App: React.FC = () => {
           />
         ) : activeTab === "studio" ? (
           <RecordingStudio onSessionCreated={handleSessionCreated} />
+        ) : activeTab === "mock" ? (
+          <MockInterviewStudio onSelectSession={handleSelectSession} />
         ) : activeTab === "history" ? (
           <SessionHistory
             onSelectSession={handleSelectSession}

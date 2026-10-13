@@ -7,6 +7,14 @@ from app.models.coaching import (
     DeliveryCoachingAdvice,
     STARFrameworkAnalysis,
 )
+from app.models.questions import (
+    CategorySummary,
+    CustomTrackRequest,
+    InterviewQuestion,
+    MockTrackDefinition,
+    MockTrackListResponse,
+    QuestionListResponse,
+)
 from app.models.session import (
     SessionCreateRequest,
     SessionDeleteResponse,
@@ -24,13 +32,19 @@ from app.models.streaming import (
 )
 
 __all__ = [
+    "CategorySummary",
     "ClientMessageType",
     "CoachingEvaluationRequest",
     "CoachingEvaluationResponse",
     "ContentClarityScore",
+    "CustomTrackRequest",
     "DeliveryAlert",
     "DeliveryCoachingAdvice",
+    "InterviewQuestion",
     "LiveMetricsUpdate",
+    "MockTrackDefinition",
+    "MockTrackListResponse",
+    "QuestionListResponse",
     "STARFrameworkAnalysis",
     "ServerMessageType",
     "SessionCreateRequest",

@@ -34,6 +34,11 @@ An objective, privacy-preserving feedback platform for behavioral and technical 
   - Multi-modal delivery coaching advice synthesizing cadence (WPM), pause distribution, filler words, and camera centering.
   - Executive rephrase demonstration showcasing high-impact behavioral answer framing.
   - Interactive AI Coach card in session review view with STAR breakdown chips, top performance strengths, and actionable growth areas.
+- **Milestone 9: Question Bank & Multi-Question Mock Interview Mode**
+  - Curated interview question bank spanning Behavioral (STAR), System Design, Technical Depth, and Leadership tracks with difficulty tiers and target durations.
+  - Sequential mock interview simulation workflow guiding candidates through multi-question interview rounds.
+  - Step-by-step progress tracking with target duration countdowns, camera centering overlays, and response capture.
+  - Unified Mock Interview Scorecard aggregating overall speaking cadence (WPM), filler density, camera eye contact, and direct links to comprehensive AI coaching reports for each response.
 
 ---
 

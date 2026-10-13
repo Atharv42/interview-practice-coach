@@ -1,9 +1,9 @@
 import React from "react";
-import { Mic, History, TrendingUp, ShieldCheck, Activity } from "lucide-react";
+import { Mic, Layers, History, TrendingUp, ShieldCheck, Activity } from "lucide-react";
 
 interface NavbarProps {
-  activeTab: "studio" | "history" | "analytics";
-  setActiveTab: (tab: "studio" | "history" | "analytics") => void;
+  activeTab: "studio" | "mock" | "history" | "analytics";
+  setActiveTab: (tab: "studio" | "mock" | "history" | "analytics") => void;
   isBackendHealthy: boolean | null;
 }
 
@@ -33,6 +33,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Mic size={18} />
             <span>Practice Studio</span>
+          </button>
+
+          <button
+            type="button"
+            className={`nav-button ${activeTab === "mock" ? "active" : ""}`}
+            onClick={() => setActiveTab("mock")}
+          >
+            <Layers size={18} />
+            <span>Mock Interview</span>
           </button>
 
           <button

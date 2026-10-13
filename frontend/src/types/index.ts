@@ -287,3 +287,61 @@ export interface CoachingEvaluationResponse {
   ethical_disclaimer: string;
 }
 
+export interface InterviewQuestion {
+  id: string;
+  category: string;
+  category_label: string;
+  title: string;
+  context_hint: string;
+  target_duration_seconds: number;
+  difficulty: string;
+}
+
+export interface CategorySummary {
+  category: string;
+  label: string;
+  count: number;
+}
+
+export interface QuestionListResponse {
+  questions: InterviewQuestion[];
+  total: number;
+  categories: CategorySummary[];
+}
+
+export interface MockTrackDefinition {
+  track_id: string;
+  track_name: string;
+  description: string;
+  difficulty: string;
+  estimated_duration_minutes: number;
+  question_count: number;
+  questions: InterviewQuestion[];
+}
+
+export interface MockTrackListResponse {
+  tracks: MockTrackDefinition[];
+  total: number;
+}
+
+export interface CustomTrackRequest {
+  track_name?: string;
+  question_ids: string[];
+}
+
+export interface MockQuestionResult {
+  question: InterviewQuestion;
+  session: SessionDetailResponse;
+}
+
+export interface MockInterviewCompletedReport {
+  track: MockTrackDefinition;
+  results: MockQuestionResult[];
+  averageWpm: number;
+  averageFillerRatio: number;
+  averageGazeRatio: number;
+  averageStability: number;
+  totalDurationSeconds: number;
+}
+
+

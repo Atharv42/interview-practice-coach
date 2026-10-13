@@ -13,10 +13,18 @@ import {
   FileAudio,
   Radio,
   Bell,
+  Clock,
+  Target,
+  Lightbulb,
 } from "lucide-react";
 import { api } from "../services/api";
 import { AudioMeter } from "./AudioMeter";
-import { DeliveryAlert, SessionDetailResponse } from "../types";
+import {
+  CategorySummary,
+  DeliveryAlert,
+  InterviewQuestion,
+  SessionDetailResponse,
+} from "../types";
 
 const PRESET_QUESTIONS = [
   "Tell me about yourself and your professional background.",
@@ -37,6 +45,63 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
   const [sessionNotes, setSessionNotes] = useState("");
   const [activeMode, setActiveMode] = useState<"live" | "upload">("live");
   const [useRealtimeWs, setUseRealtimeWs] = useState(true);
+
+  // Question bank integration
+  const [bankQuestions, setBankQuestions] = useState<InterviewQuestion[]>([]);
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedQuestionObj, setSelectedQuestionObj] = useState<InterviewQuestion | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    api.listQuestions().then((res) => {
+      if (isMounted && res.questions.length > 0) {
+        setBankQuestions(res.questions);
+        setCategories(res.categories);
+        setSelectedQuestionObj(res.questions[0]);
+        setSelectedQuestion(res.questions[0].title);
+      }
+    }).catch(() => {
+      // Fallback to presets
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredQuestions =
+    selectedCategory === "all"
+      ? bankQuestions.length > 0
+        ? bankQuestions
+        : PRESET_QUESTIONS.map((title, i) => ({
+            id: `preset-${i}`,
+            category: "general",
+            category_label: "General",
+            title,
+            context_hint:
+              "Structure your answer using STAR: Situation, Task, Action, and Result.",
+            target_duration_seconds: 120,
+            difficulty: "mid",
+          }))
+      : bankQuestions.filter((q) => q.category === selectedCategory);
+
+  const handleSelectQuestion = (title: string) => {
+    setSelectedQuestion(title);
+    const found = bankQuestions.find((q) => q.title === title) || null;
+    setSelectedQuestionObj(found);
+  };
+
+  const handleSelectCategory = (categoryKey: string) => {
+    setSelectedCategory(categoryKey);
+    const sub =
+      categoryKey === "all"
+        ? bankQuestions
+        : bankQuestions.filter((q) => q.category === categoryKey);
+    if (sub.length > 0) {
+      setSelectedQuestion(sub[0].title);
+      setSelectedQuestionObj(sub[0]);
+    }
+  };
 
   // Media states
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
@@ -430,6 +495,33 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
           </div>
         </div>
 
+        {categories.length > 0 && (
+          <div className="form-group">
+            <label className="form-label">Filter Question Topic:</label>
+            <div className="category-pills">
+              <button
+                type="button"
+                className={`category-pill ${selectedCategory === "all" ? "active" : ""}`}
+                onClick={() => handleSelectCategory("all")}
+                disabled={isRecording || isProcessing}
+              >
+                All Topics ({bankQuestions.length})
+              </button>
+              {categories.map((c) => (
+                <button
+                  key={c.category}
+                  type="button"
+                  className={`category-pill ${selectedCategory === c.category ? "active" : ""}`}
+                  onClick={() => handleSelectCategory(c.category)}
+                  disabled={isRecording || isProcessing}
+                >
+                  {c.label} ({c.count})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="form-group">
           <label className="form-label" htmlFor="prompt-select">
             Select Practice Question:
@@ -438,16 +530,43 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
             id="prompt-select"
             className="form-select"
             value={selectedQuestion}
-            onChange={(e) => setSelectedQuestion(e.target.value)}
+            onChange={(e) => handleSelectQuestion(e.target.value)}
             disabled={isRecording || isProcessing}
           >
-            {PRESET_QUESTIONS.map((q, idx) => (
-              <option key={idx} value={q}>
-                {q}
+            {filteredQuestions.map((q) => (
+              <option key={q.id} value={q.title}>
+                {q.title}
               </option>
             ))}
           </select>
         </div>
+
+        {selectedQuestionObj && !customQuestion.trim() && (
+          <div className="question-hint-box">
+            <div className="question-hint-meta">
+              <span className="badge-primary">{selectedQuestionObj.category_label}</span>
+              <span className="badge-subtle">
+                <Target size={12} style={{ display: "inline", marginRight: "3px" }} />
+                Level: {selectedQuestionObj.difficulty.toUpperCase()}
+              </span>
+              <span className="badge-subtle">
+                <Clock size={12} style={{ display: "inline", marginRight: "3px" }} />
+                Target: {Math.floor(selectedQuestionObj.target_duration_seconds / 60)}m{" "}
+                {selectedQuestionObj.target_duration_seconds % 60
+                  ? `${selectedQuestionObj.target_duration_seconds % 60}s`
+                  : ""}
+              </span>
+            </div>
+            <div className="question-hint-text">
+              <Lightbulb
+                size={16}
+                className="text-amber-500"
+                style={{ flexShrink: 0, marginTop: "2px" }}
+              />
+              <span>{selectedQuestionObj.context_hint}</span>
+            </div>
+          </div>
+        )}
 
         <div className="form-group">
           <label className="form-label" htmlFor="custom-prompt">
