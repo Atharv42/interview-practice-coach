@@ -1,7 +1,4 @@
-"""API endpoints for session feature aggregation, PCA projection, and delivery trend analysis."""
-
-
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
 from app.models.analytics import (
     AnalyticsDashboardResponse,
@@ -13,8 +10,32 @@ from app.pipeline.analytics import (
     compute_pca_and_clustering,
     extract_session_feature_vector,
 )
+from app.storage.session_repository import SessionRepository
 
 router = APIRouter(prefix="/analytics", tags=["Analytics Pipeline"])
+
+
+def get_session_repo() -> SessionRepository:
+    """Dependency provider for SessionRepository."""
+    return SessionRepository()
+
+
+@router.get(
+    "/summary",
+    response_model=AnalyticsDashboardResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Compute aggregate PCA, clustering, and trends directly from persisted sessions",
+    description=(
+        "Pulls chronological session history directly from the database and runs "
+        "unsupervised 2D PCA dimensionality reduction, K-Means delivery clustering, "
+        "and pacing trend regressions."
+    ),
+)
+def get_persisted_sessions_analytics(
+    repo: SessionRepository = Depends(get_session_repo),
+) -> AnalyticsDashboardResponse:
+    """Compute longitudinal delivery trends and PCA archetype clustering from database."""
+    return repo.compute_analytics_summary()
 
 
 @router.post(

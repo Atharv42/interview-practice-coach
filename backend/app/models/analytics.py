@@ -1,6 +1,5 @@
 """Pydantic models for multimodal feature aggregation, PCA projection, clustering, and trends."""
 
-
 from pydantic import BaseModel, Field
 
 from app.models.audio import AudioMetrics

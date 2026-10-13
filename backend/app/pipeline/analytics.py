@@ -249,9 +249,7 @@ def compute_pca_and_clustering(
 
     pca_result = PCAResult(
         is_fallback=False,
-        status_message=(
-            f"Exploratory PCA and K-Means calculated across {n_samples} sessions."
-        ),
+        status_message=(f"Exploratory PCA and K-Means calculated across {n_samples} sessions."),
         explained_variance_ratio=explained_var,
         feature_loadings=loadings,
         points=projection_points,
