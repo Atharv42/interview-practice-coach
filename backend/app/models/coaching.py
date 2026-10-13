@@ -92,9 +92,9 @@ class CoachingEvaluationResponse(BaseModel):
     )
     ethical_disclaimer: str = Field(
         default=(
-            "AI coaching advice evaluates structural completeness (STAR method) "
-            "and objective delivery mechanics. Designed for constructive self-practice "
-            "and does not determine real hiring decisions."
+            "Ethical design note: AI coaching advice evaluates structural completeness "
+            "(STAR method) and objective delivery mechanics. Designed for constructive "
+            "self-practice and does not determine real hiring decisions."
         ),
         description="Ethical disclaimer",
     )

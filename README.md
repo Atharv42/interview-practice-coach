@@ -39,6 +39,11 @@ An objective, privacy-preserving feedback platform for behavioral and technical 
   - Sequential mock interview simulation workflow guiding candidates through multi-question interview rounds.
   - Step-by-step progress tracking with target duration countdowns, camera centering overlays, and response capture.
   - Unified Mock Interview Scorecard aggregating overall speaking cadence (WPM), filler density, camera eye contact, and direct links to comprehensive AI coaching reports for each response.
+- **Milestone 10: Deployment Preparation**
+  - Production-ready `backend/Dockerfile` with non-root execution (`appuser`), FFmpeg, and health checks.
+  - Multi-stage `frontend/Dockerfile` pairing Vite production compilation with Nginx static serving, reverse proxying, and WebSocket proxying.
+  - Multi-service `docker-compose.yml` coordinating backend and frontend with persistent volumes for SQLite and model weights.
+  - Environment variable templates (`.env.example`) and full deployment reference in [docs/deployment.md](docs/deployment.md).
 
 ---
 
@@ -53,7 +58,9 @@ An objective, privacy-preserving feedback platform for behavioral and technical 
 
 ## Running the Application
 
-### 1. Backend (FastAPI)
+### Option A: Local Development
+
+#### 1. Backend (FastAPI)
 
 ```bash
 cd backend
@@ -62,7 +69,7 @@ cd backend
 - Interactive Swagger API docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 - Health check: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
 
-### 2. Frontend (React + Vite)
+#### 2. Frontend (React + Vite)
 
 ```bash
 cd frontend
@@ -70,3 +77,12 @@ npm install
 npm run dev
 ```
 - Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Option B: Docker Compose (Multi-Service Production Setup)
+
+```bash
+docker compose up --build
+```
+- Frontend Web App: [http://localhost:80](http://localhost:80)
+- Backend API & Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Detailed deployment instructions: See [docs/deployment.md](docs/deployment.md).

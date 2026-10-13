@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+tests/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+practice_coach.db
+.env
+.env.*
+.git
+.gitignore

@@ -105,7 +105,7 @@ def get_mock_track(track_id: str) -> MockTrackDefinition:
 def create_custom_mock_track(payload: CustomTrackRequest) -> MockTrackDefinition:
     """Generate a custom mock interview track."""
     track = create_custom_track(payload.track_name, payload.question_ids)
-    if track.question_count == 0:
+    if not track:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="None of the specified question IDs could be resolved in the question bank.",

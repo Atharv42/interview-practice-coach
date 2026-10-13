@@ -24,7 +24,10 @@ QUESTION_REGISTRY: list[InterviewQuestion] = [
         id="beh-conflict-resolution",
         category="behavioral",
         category_label="Behavioral & STAR",
-        title="Tell me about a time you had a strong technical disagreement with a teammate.",
+        title=(
+            "Tell me about a time you handled conflict or a strong technical disagreement "
+            "with a teammate."
+        ),
         context_hint=(
             "Use STAR: Outline the architectural disagreement (Situation), your goal (Task), "
             "how you evaluated objective trade-offs respectfully (Action), and the "
@@ -398,12 +401,15 @@ def get_mock_track_by_id(track_id: str) -> MockTrackDefinition | None:
     return None
 
 
-def create_custom_track(name: str, question_ids: list[str]) -> MockTrackDefinition:
+def create_custom_track(name: str, question_ids: list[str]) -> MockTrackDefinition | None:
     """Construct an on-the-fly custom interview track from selected question slugs."""
+    valid_ids = [qid for qid in question_ids if get_question_by_id(qid) is not None]
+    if not valid_ids:
+        return None
     return _build_track(
         track_id="custom-user-track",
         track_name=name.strip() or "Custom Practice Track",
         description="Candidate-curated mock interview practice sequence.",
         difficulty="custom",
-        q_ids=question_ids,
+        q_ids=valid_ids,
     )
