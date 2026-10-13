@@ -1187,3 +1187,302 @@ body {
   padding: 2px 8px;
   border-radius: 4px;
 }
+
+/* AI Coaching Section */
+.coaching-card {
+  border-left: 4px solid var(--primary);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+  margin-bottom: 24px;
+}
+
+.coaching-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.coaching-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.coaching-header-title h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.coaching-header-title p {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.coaching-score-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.coaching-score-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+}
+
+.coaching-pill-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.coaching-pill-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.star-section {
+  margin-bottom: 24px;
+}
+
+.star-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.star-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.star-step-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.star-step-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.star-step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.star-letter-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.875rem;
+}
+
+.star-badge-s { background-color: #dbeafe; color: #1e40af; }
+.star-badge-t { background-color: #fef3c7; color: #92400e; }
+.star-badge-a { background-color: #d1fae5; color: #065f46; }
+.star-badge-r { background-color: #ede9fe; color: #5b21b6; }
+
+.star-step-label {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-main);
+}
+
+.star-snippet-box {
+  background-color: #f8fafc;
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 0.775rem;
+  color: var(--text-main);
+  font-style: italic;
+  line-height: 1.4;
+  margin-top: auto;
+  border-left: 2px solid var(--primary);
+}
+
+.star-missing-tip {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: auto;
+}
+
+.star-summary-banner {
+  background-color: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 0.825rem;
+  color: var(--text-main);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.polished-excerpt-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.polished-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.polished-quote {
+  font-size: 0.9rem;
+  color: #14532d;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.delivery-advice-section {
+  margin-bottom: 24px;
+}
+
+.delivery-advice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.advice-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.advice-card-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.advice-card-body {
+  font-size: 0.825rem;
+  color: var(--text-main);
+  line-height: 1.45;
+}
+
+.strengths-growth-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.strengths-card {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.growth-card {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.list-card-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strengths-title { color: #15803d; }
+.growth-title { color: #b45309; }
+
+.coaching-bullet-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coaching-bullet-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.825rem;
+  line-height: 1.45;
+}
+
+.bullet-icon-strength {
+  color: #16a34a;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.bullet-icon-growth {
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.coaching-disclaimer-box {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+

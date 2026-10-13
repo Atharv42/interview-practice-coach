@@ -237,3 +237,53 @@ export interface StreamFinalReport {
   alerts_triggered_count: number;
   saved_to_db: boolean;
 }
+
+export interface STARFrameworkAnalysis {
+  situation_detected: boolean;
+  situation_snippet?: string | null;
+  task_detected: boolean;
+  task_snippet?: string | null;
+  action_detected: boolean;
+  action_snippet?: string | null;
+  result_detected: boolean;
+  result_snippet?: string | null;
+  overall_star_score: number;
+  star_summary: string;
+}
+
+export interface ContentClarityScore {
+  score: number;
+  word_count: number;
+  conciseness_rating: string;
+  filler_density_percent: number;
+  observations: string[];
+}
+
+export interface DeliveryCoachingAdvice {
+  pacing_feedback: string;
+  pause_feedback: string;
+  filler_feedback: string;
+  visual_feedback: string;
+  overall_delivery_summary: string;
+}
+
+export interface CoachingEvaluationRequest {
+  session_id?: string | null;
+  question_prompt?: string | null;
+  transcript?: string | null;
+  audio_metrics?: AudioMetrics | null;
+  visual_metrics?: VisualMetrics | null;
+}
+
+export interface CoachingEvaluationResponse {
+  session_id?: string | null;
+  question_prompt?: string | null;
+  clarity: ContentClarityScore;
+  star_analysis: STARFrameworkAnalysis;
+  delivery_advice: DeliveryCoachingAdvice;
+  top_strengths: string[];
+  areas_for_improvement: string[];
+  sample_polished_excerpt?: string | null;
+  ethical_disclaimer: string;
+}
+

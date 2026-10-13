@@ -1,5 +1,12 @@
 """Data models and schemas."""
 
+from app.models.coaching import (
+    CoachingEvaluationRequest,
+    CoachingEvaluationResponse,
+    ContentClarityScore,
+    DeliveryCoachingAdvice,
+    STARFrameworkAnalysis,
+)
 from app.models.session import (
     SessionCreateRequest,
     SessionDeleteResponse,
@@ -18,8 +25,13 @@ from app.models.streaming import (
 
 __all__ = [
     "ClientMessageType",
+    "CoachingEvaluationRequest",
+    "CoachingEvaluationResponse",
+    "ContentClarityScore",
     "DeliveryAlert",
+    "DeliveryCoachingAdvice",
     "LiveMetricsUpdate",
+    "STARFrameworkAnalysis",
     "ServerMessageType",
     "SessionCreateRequest",
     "SessionDeleteResponse",

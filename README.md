@@ -28,6 +28,12 @@ An objective, privacy-preserving feedback platform for behavioral and technical 
     - Dynamic live alerts for extended pauses (>3.0s), off-center gaze shifts (>3.5s), and camera framing loss.
     - Running pacing and speech interval tracking with graceful session finalization.
     - Real-time live alert toast integration in the frontend practice studio.
+- **Milestone 8: AI Coaching & Recommendation Engine**
+  - Rule-based STAR framework structure evaluation detecting Situation, Task, Action, and Result components with excerpt snippets.
+  - Spoken content clarity and conciseness scoring with filler density impact and verbal observations.
+  - Multi-modal delivery coaching advice synthesizing cadence (WPM), pause distribution, filler words, and camera centering.
+  - Executive rephrase demonstration showcasing high-impact behavioral answer framing.
+  - Interactive AI Coach card in session review view with STAR breakdown chips, top performance strengths, and actionable growth areas.
 
 ---
 

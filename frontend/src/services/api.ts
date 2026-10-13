@@ -11,6 +11,8 @@ import {
   SessionDetailResponse,
   SessionListResponse,
   VisualAnalysisResponse,
+  CoachingEvaluationRequest,
+  CoachingEvaluationResponse,
 } from "../types";
 
 const API_BASE = "";
@@ -148,4 +150,27 @@ export const api = {
     const host = window.location.host;
     return `${protocol}//${host}/api/v1/ws/practice${sessionId ? `/${encodeURIComponent(sessionId)}` : ""}`;
   },
+
+  /**
+   * Request comprehensive STAR framework and delivery coaching evaluation
+   */
+  async getCoachingEvaluation(
+    payload: CoachingEvaluationRequest
+  ): Promise<CoachingEvaluationResponse> {
+    const res = await fetch(`${API_BASE}/api/v1/coaching/evaluate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return handleResponse<CoachingEvaluationResponse>(res);
+  },
+
+  /**
+   * Retrieve AI coaching advice directly for an existing saved session
+   */
+  async getSessionCoaching(sessionId: string): Promise<CoachingEvaluationResponse> {
+    const res = await fetch(`${API_BASE}/api/v1/coaching/sessions/${encodeURIComponent(sessionId)}`);
+    return handleResponse<CoachingEvaluationResponse>(res);
+  },
 };
+
