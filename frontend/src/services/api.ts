@@ -139,4 +139,13 @@ export const api = {
     const res = await fetch(`${API_BASE}/api/v1/sessions/analytics/summary`);
     return handleResponse<AnalyticsDashboardResponse>(res);
   },
+
+  /**
+   * Resolve WebSocket URL for real-time practice streaming
+   */
+  getWebSocketUrl(sessionId?: string): string {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const host = window.location.host;
+    return `${protocol}//${host}/api/v1/ws/practice${sessionId ? `/${encodeURIComponent(sessionId)}` : ""}`;
+  },
 };

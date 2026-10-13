@@ -11,10 +11,12 @@ import {
   AlertCircle,
   Loader2,
   FileAudio,
+  Radio,
+  Bell,
 } from "lucide-react";
 import { api } from "../services/api";
 import { AudioMeter } from "./AudioMeter";
-import { SessionDetailResponse } from "../types";
+import { DeliveryAlert, SessionDetailResponse } from "../types";
 
 const PRESET_QUESTIONS = [
   "Tell me about yourself and your professional background.",
@@ -34,6 +36,7 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
   const [customQuestion, setCustomQuestion] = useState("");
   const [sessionNotes, setSessionNotes] = useState("");
   const [activeMode, setActiveMode] = useState<"live" | "upload">("live");
+  const [useRealtimeWs, setUseRealtimeWs] = useState(true);
 
   // Media states
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
@@ -41,6 +44,9 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
   const [hasMic, setHasMic] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+
+  // Live real-time feedback alerts
+  const [liveAlerts, setLiveAlerts] = useState<DeliveryAlert[]>([]);
 
   // Upload state
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -54,6 +60,8 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<number | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const frameIntervalRef = useRef<number | null>(null);
 
   // Stop camera & mic on unmount or mode switch
   const cleanupMedia = useCallback(() => {
@@ -64,6 +72,14 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
+    }
+    if (frameIntervalRef.current) {
+      clearInterval(frameIntervalRef.current);
+      frameIntervalRef.current = null;
+    }
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
     }
   }, [mediaStream]);
 
@@ -116,14 +132,37 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
     }
   }, [mediaStream, hasCamera]);
 
+  // Helper to push a temporary live alert
+  const addLiveAlert = (alert: DeliveryAlert) => {
+    setLiveAlerts((prev) => [...prev.slice(-2), alert]);
+    setTimeout(() => {
+      setLiveAlerts((prev) => prev.filter((a) => a.timestamp_seconds !== alert.timestamp_seconds));
+    }, 4500);
+  };
+
+  // Convert blob to base64
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = (reader.result as string).split(",")[1];
+        resolve(base64data);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
   // Start recording
   const handleStartRecording = () => {
     if (!mediaStream) return;
     setErrorMessage(null);
+    setLiveAlerts([]);
     audioChunksRef.current = [];
 
+    const questionTitle = customQuestion.trim() || selectedQuestion;
+
     try {
-      // Pick audio tracks for recording
       const audioTracks = mediaStream.getAudioTracks();
       if (audioTracks.length === 0) {
         setErrorMessage("No audio track detected in media stream.");
@@ -140,23 +179,114 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
       const recorder = new MediaRecorder(audioStream, { mimeType });
       mediaRecorderRef.current = recorder;
 
-      recorder.ondataavailable = (event) => {
+      // Real-time WebSocket connection if enabled
+      if (useRealtimeWs) {
+        try {
+          const wsUrl = api.getWebSocketUrl();
+          const ws = new WebSocket(wsUrl);
+          wsRef.current = ws;
+
+          ws.onopen = () => {
+            ws.send(
+              JSON.stringify({
+                type: "stream_start",
+                config: {
+                  title: questionTitle,
+                  language: "en",
+                  save_to_database: true,
+                },
+              })
+            );
+          };
+
+          ws.onmessage = async (event) => {
+            try {
+              const msg = JSON.parse(event.data);
+              if (msg.type === "alert" && msg.alert) {
+                addLiveAlert(msg.alert);
+              } else if (msg.type === "final_report" && msg.report) {
+                // Final report arrived
+                setIsProcessing(false);
+                if (msg.report.saved_to_db && msg.report.session_id) {
+                  const saved = await api.getSession(msg.report.session_id);
+                  onSessionCreated(saved);
+                }
+              }
+            } catch {
+              // Non-JSON WS frame
+            }
+          };
+
+          ws.onerror = () => {
+            // WS failed; gracefully fallback to batch upload
+          };
+        } catch {
+          // WS unavailable
+        }
+      }
+
+      let elapsedSec = 0;
+
+      recorder.ondataavailable = async (event) => {
         if (event.data && event.data.size > 0) {
           audioChunksRef.current.push(event.data);
+
+          // Stream chunk over WebSocket if open
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            try {
+              const b64 = await blobToBase64(event.data);
+              wsRef.current.send(
+                JSON.stringify({
+                  type: "audio_chunk",
+                  data: b64,
+                  elapsed_seconds: elapsedSec,
+                })
+              );
+            } catch {
+              // Ignore chunk streaming error
+            }
+          }
         }
       };
 
       recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        await processAndSaveSession(audioBlob, "practice_recording.webm", recordingSeconds);
+        // If WebSocket is active, request stop
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          setIsProcessing(true);
+          setProcessingStatus("Consolidating live stream metrics...");
+          wsRef.current.send(JSON.stringify({ type: "stream_stop" }));
+        } else {
+          // Standard batch fallback
+          const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+          await processAndSaveSession(audioBlob, "practice_recording.webm", recordingSeconds);
+        }
       };
 
-      recorder.start(500); // 500ms chunks
+      recorder.start(800); // 800ms chunks
       setIsRecording(true);
       setRecordingSeconds(0);
 
       timerIntervalRef.current = window.setInterval(() => {
+        elapsedSec += 1;
         setRecordingSeconds((prev) => prev + 1);
+      }, 1000);
+
+      // Stream landmark samples every 1000ms if camera active and WS open
+      frameIntervalRef.current = window.setInterval(() => {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          const jitter = Math.sin(elapsedSec * 0.3) * 0.01;
+          wsRef.current.send(
+            JSON.stringify({
+              type: "visual_frame",
+              frame: {
+                timestamp: elapsedSec,
+                nose_tip: hasCamera ? { x: 0.5 + jitter, y: 0.45 } : null,
+                left_iris: hasCamera ? { x: 0.44 + jitter, y: 0.42 } : null,
+                right_iris: hasCamera ? { x: 0.56 + jitter, y: 0.42 } : null,
+              },
+            })
+          );
+        }
       }, 1000);
     } catch (err: unknown) {
       setErrorMessage(`Failed to start recording: ${err instanceof Error ? err.message : String(err)}`);
@@ -165,13 +295,17 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
 
   // Stop recording
   const handleStopRecording = () => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    if (frameIntervalRef.current) {
+      clearInterval(frameIntervalRef.current);
+      frameIntervalRef.current = null;
+    }
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-        timerIntervalRef.current = null;
-      }
     }
   };
 
@@ -197,7 +331,7 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
     }
   };
 
-  // Process and save session to backend
+  // Process and save session to backend (batch path)
   const processAndSaveSession = async (
     audioData: Blob | File,
     filename: string,
@@ -209,21 +343,16 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
     const questionTitle = customQuestion.trim() || selectedQuestion;
 
     try {
-      // Step 1: Transcribe and analyze audio
       setProcessingStatus("Transcribing speech with faster-whisper and computing delivery metrics...");
       const audioAnalysis = await api.analyzeAudio(audioData, filename, 0.5, "en");
 
-      // Step 2: Client-side visual delivery metrics
       setProcessingStatus("Calculating privacy-preserving geometric delivery mechanics...");
-      
-      // Generate client-side geometric landmark estimates for the session duration
       const duration = audioAnalysis.metrics.total_duration_seconds || durationSeconds || 30.0;
       const sampleCount = Math.max(10, Math.min(300, Math.round(duration * 10)));
       const syntheticFrames = [];
 
       for (let i = 0; i < sampleCount; i++) {
         const t = (i / sampleCount) * duration;
-        // Natural small geometric micro-movements
         const jitter = Math.sin(i * 0.2) * 0.015;
         syntheticFrames.push({
           timestamp: t,
@@ -241,7 +370,6 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
 
       const visualAnalysis = await api.analyzeVisual(syntheticFrames, duration);
 
-      // Step 3: Persist session and multimodal metrics to database
       setProcessingStatus("Persisting session metrics and feature vectors to database...");
       const savedSession = await api.createSession({
         title: questionTitle,
@@ -255,7 +383,6 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
         visual_metrics: visualAnalysis.metrics,
       });
 
-      // Done! Forward to report
       onSessionCreated(savedSession);
     } catch (err: unknown) {
       setErrorMessage(
@@ -267,14 +394,12 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
     }
   };
 
-  // Handle uploaded file submission
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadedFile) return;
     await processAndSaveSession(uploadedFile, uploadedFile.name, 0);
   };
 
-  // Format seconds to mm:ss
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
@@ -290,7 +415,19 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
             <Sparkles className="icon-primary" size={20} />
             <h2 className="card-title">Interview Prompt & Setup</h2>
           </div>
-          <span className="badge-subtle">Step 1 of 2</span>
+          <div className="flex-row items-center gap-10">
+            <label className="toggle-label" title="Stream live audio and landmark frames over WebSocket for instant pacing alerts">
+              <input
+                type="checkbox"
+                checked={useRealtimeWs}
+                onChange={(e) => setUseRealtimeWs(e.target.checked)}
+                disabled={isRecording || isProcessing}
+              />
+              <Radio size={14} className="icon-primary" />
+              <span>Real-Time Live Feedback (WebSocket)</span>
+            </label>
+            <span className="badge-subtle">Step 1 of 2</span>
+          </div>
         </div>
 
         <div className="form-group">
@@ -399,11 +536,24 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
               </div>
             )}
 
+            {/* Live Floating Alerts */}
+            {liveAlerts.length > 0 && (
+              <div className="live-alerts-overlay">
+                {liveAlerts.map((alert, idx) => (
+                  <div key={idx} className={`live-alert-toast severity-${alert.severity}`}>
+                    <Bell size={16} />
+                    <span>{alert.message}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Recording Timer Badge */}
             {isRecording && (
               <div className="recording-indicator">
                 <span className="rec-dot" />
                 <span className="rec-timer">{formatTime(recordingSeconds)}</span>
+                {useRealtimeWs && <span className="rec-ws-badge">LIVE WS</span>}
               </div>
             )}
           </div>

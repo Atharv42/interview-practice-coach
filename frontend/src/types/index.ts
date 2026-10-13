@@ -210,3 +210,30 @@ export interface HealthResponse {
   version: string;
   service: string;
 }
+
+export interface DeliveryAlert {
+  timestamp_seconds: number;
+  alert_type: string;
+  message: string;
+  severity: "info" | "warning" | "caution";
+}
+
+export interface LiveMetricsUpdate {
+  elapsed_seconds: number;
+  current_wpm_estimate?: number | null;
+  recent_filler_count: number;
+  current_pause_seconds: number;
+  centered_gaze_ratio?: number | null;
+  head_stability_score?: number | null;
+  face_detected: boolean;
+}
+
+export interface StreamFinalReport {
+  session_id: string;
+  total_duration_seconds: number;
+  audio_metrics?: AudioMetrics | null;
+  visual_metrics?: VisualMetrics | null;
+  transcript?: string | null;
+  alerts_triggered_count: number;
+  saved_to_db: boolean;
+}

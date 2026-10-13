@@ -12,6 +12,7 @@ from app.api.analytics import router as analytics_router
 from app.api.audio import router as audio_router
 from app.api.health import router as health_router
 from app.api.sessions import router as sessions_router
+from app.api.streaming import router as streaming_router
 from app.api.visual import router as visual_router
 from app.models.schemas import RootResponse
 
@@ -81,6 +82,7 @@ app.include_router(audio_router, prefix="/api/v1")
 app.include_router(visual_router, prefix="/api/v1")
 app.include_router(analytics_router, prefix="/api/v1")
 app.include_router(sessions_router, prefix="/api/v1")
+app.include_router(streaming_router, prefix="/api/v1")
 
 
 @app.get("/", response_model=RootResponse, summary="API Root")

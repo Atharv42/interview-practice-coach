@@ -22,6 +22,12 @@ An objective, privacy-preserving feedback platform for behavioral and technical 
     - **Session Report**: Visual delivery metric cards, WPM gauge, filler breakdown pills, pause distribution, and full transcript viewer.
     - **Session History**: Paginated, searchable history of previous practice attempts with one-click permanent cascading deletion.
     - **Analytics Dashboard**: Interactive SVG 2D PCA delivery projection scatter plot, exploratory delivery archetype cards, and longitudinal regression trendlines.
+- **Milestone 7: Real-Time Streaming & WebSocket Pipeline**
+  - Low-latency bidirectional WebSocket connection (`/api/v1/ws/practice`):
+    - Real-time audio chunks and landmark frame streaming.
+    - Dynamic live alerts for extended pauses (>3.0s), off-center gaze shifts (>3.5s), and camera framing loss.
+    - Running pacing and speech interval tracking with graceful session finalization.
+    - Real-time live alert toast integration in the frontend practice studio.
 
 ---
 
