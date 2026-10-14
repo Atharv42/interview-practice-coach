@@ -1,5 +1,4 @@
-"""Pipeline manager maintaining state and incremental metrics for real-time practice sessions."""
-
+import logging
 import os
 import tempfile
 import time
@@ -18,6 +17,8 @@ from app.pipeline.audio_features import compute_audio_metrics
 from app.pipeline.audio_transcriber import AudioTranscriber
 from app.pipeline.visual_features import compute_visual_metrics
 from app.storage.session_repository import SessionRepository
+
+logger = logging.getLogger(__name__)
 
 
 class StreamingSession:
@@ -231,8 +232,24 @@ class StreamingSession:
         # 1. Process aggregated audio chunks
         if self.audio_chunks:
             combined_audio_bytes = b"".join(self.audio_chunks)
-            if len(combined_audio_bytes) > 1024:
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+            if len(combined_audio_bytes) > 512:
+                # Detect container suffix from magic bytes
+                if combined_audio_bytes.startswith(b"\x1a\x45\xdf\xa3"):
+                    suffix = ".webm"
+                elif combined_audio_bytes.startswith(b"OggS"):
+                    suffix = ".ogg"
+                elif combined_audio_bytes.startswith(b"RIFF"):
+                    suffix = ".wav"
+                elif combined_audio_bytes.startswith(b"ID3") or combined_audio_bytes[:2] in (
+                    b"\xff\xfb",
+                    b"\xff\xf3",
+                    b"\xff\xf2",
+                ):
+                    suffix = ".mp3"
+                else:
+                    suffix = ".webm"
+
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
                 try:
                     temp_file.write(combined_audio_bytes)
                     temp_file.flush()
@@ -255,9 +272,8 @@ class StreamingSession:
                             total_audio_duration=audio_duration,
                             pause_threshold_seconds=self.config.pause_threshold_seconds,
                         )
-                    except Exception:
-                        # Fallback if binary transcription fails on raw stream chunks
-                        pass
+                    except Exception as exc:
+                        logger.warning("Transcription failed during stream finalization: %s", exc)
                 finally:
                     if os.path.exists(temp_file.name):
                         try:
@@ -291,7 +307,8 @@ class StreamingSession:
                     )
                 )
                 saved_to_db = True
-            except Exception:
+            except Exception as exc:
+                logger.exception("Failed to save streaming session to database: %s", exc)
                 saved_to_db = False
 
         return StreamFinalReport(

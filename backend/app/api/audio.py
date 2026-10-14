@@ -67,6 +67,17 @@ async def analyze_audio(
         elif words:
             total_duration = max(w.end for w in words)
 
+        # Fallback to audio container duration if speech is silent or below VAD threshold
+        if total_duration <= 0.0 and temp_file_path:
+            try:
+                import av
+
+                with av.open(temp_file_path) as container:
+                    if container.duration:
+                        total_duration = round(float(container.duration) / 1000000.0, 2)
+            except Exception:
+                pass
+
         # 4. Compute deterministic delivery metrics
         metrics = compute_audio_metrics(
             words=words,

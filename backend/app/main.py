@@ -2,6 +2,21 @@
 
 import os
 
+# PyAV >= 14 compatibility: faster-whisper calls av.open(..., metadata_errors="ignore"),
+# which was deprecated and removed in recent PyAV versions. We wrap av.open to filter it.
+try:
+    import av
+
+    _orig_av_open = av.open
+
+    def _compat_av_open(*args, **kwargs):
+        kwargs.pop("metadata_errors", None)
+        return _orig_av_open(*args, **kwargs)
+
+    av.open = _compat_av_open
+except ImportError:
+    pass
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware

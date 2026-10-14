@@ -299,6 +299,16 @@ export const SessionDetailView: React.FC<SessionDetailViewProps> = ({
             </p>
           </div>
         )}
+
+        {!audio && !visual && (
+          <div className="card empty-state-card text-center" style={{ gridColumn: "1 / -1", padding: "2rem" }}>
+            <AlertCircle size={36} className="text-warning empty-icon" />
+            <h3>No Delivery Metrics Detected</h3>
+            <p className="text-muted">
+              Audio and visual delivery metrics were not captured during this recording or speech was below detection thresholds.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* AI Coaching & STAR Evaluation Section */}

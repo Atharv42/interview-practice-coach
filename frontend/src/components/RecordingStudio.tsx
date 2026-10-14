@@ -126,6 +126,8 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<number | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const wsFailedRef = useRef<boolean>(false);
+  const wsTimeoutRef = useRef<number | null>(null);
   const frameIntervalRef = useRef<number | null>(null);
 
   // Stop camera & mic on unmount or mode switch
@@ -141,6 +143,10 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
     if (frameIntervalRef.current) {
       clearInterval(frameIntervalRef.current);
       frameIntervalRef.current = null;
+    }
+    if (wsTimeoutRef.current) {
+      clearTimeout(wsTimeoutRef.current);
+      wsTimeoutRef.current = null;
     }
     if (wsRef.current) {
       wsRef.current.close();
@@ -224,6 +230,11 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
     setErrorMessage(null);
     setLiveAlerts([]);
     audioChunksRef.current = [];
+    wsFailedRef.current = false;
+    if (wsTimeoutRef.current) {
+      clearTimeout(wsTimeoutRef.current);
+      wsTimeoutRef.current = null;
+    }
 
     const questionTitle = customQuestion.trim() || selectedQuestion;
 
@@ -271,11 +282,23 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
                 addLiveAlert(msg.alert);
               } else if (msg.type === "final_report" && msg.report) {
                 // Final report arrived
-                setIsProcessing(false);
-                if (msg.report.saved_to_db && msg.report.session_id) {
-                  const saved = await api.getSession(msg.report.session_id);
-                  onSessionCreated(saved);
+                if (wsTimeoutRef.current) {
+                  clearTimeout(wsTimeoutRef.current);
+                  wsTimeoutRef.current = null;
                 }
+                if (msg.report.saved_to_db && msg.report.session_id) {
+                  try {
+                    const saved = await api.getSession(msg.report.session_id);
+                    setIsProcessing(false);
+                    onSessionCreated(saved);
+                    return;
+                  } catch (e) {
+                    console.warn("Could not retrieve session from WS report:", e);
+                  }
+                }
+                // Fallback to batch upload if session was not saved or had no metrics
+                const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+                await processAndSaveSession(audioBlob, "practice_recording.webm", elapsedSec);
               }
             } catch {
               // Non-JSON WS frame
@@ -284,9 +307,14 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
 
           ws.onerror = () => {
             // WS failed; gracefully fallback to batch upload
+            wsFailedRef.current = true;
+          };
+
+          ws.onclose = () => {
+            // WS connection closed
           };
         } catch {
-          // WS unavailable
+          wsFailedRef.current = true;
         }
       }
 
@@ -297,7 +325,7 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
           audioChunksRef.current.push(event.data);
 
           // Stream chunk over WebSocket if open
-          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && !wsFailedRef.current) {
             try {
               const b64 = await blobToBase64(event.data);
               wsRef.current.send(
@@ -315,15 +343,31 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({ onSessionCreat
       };
 
       recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+
+        if (audioBlob.size < 500) {
+          setIsProcessing(false);
+          setIsRecording(false);
+          setErrorMessage(
+            "Recording was too short or no audio was detected. Please record for at least a few seconds."
+          );
+          return;
+        }
+
         // If WebSocket is active, request stop
-        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && !wsFailedRef.current) {
           setIsProcessing(true);
           setProcessingStatus("Consolidating live stream metrics...");
           wsRef.current.send(JSON.stringify({ type: "stream_stop" }));
+
+          // Safety timeout: if WS final_report doesn't arrive within 10s, process via batch fallback
+          wsTimeoutRef.current = window.setTimeout(async () => {
+            console.warn("WebSocket final_report timeout, falling back to batch upload");
+            await processAndSaveSession(audioBlob, "practice_recording.webm", elapsedSec);
+          }, 10000);
         } else {
           // Standard batch fallback
-          const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-          await processAndSaveSession(audioBlob, "practice_recording.webm", recordingSeconds);
+          await processAndSaveSession(audioBlob, "practice_recording.webm", elapsedSec || recordingSeconds);
         }
       };
 
