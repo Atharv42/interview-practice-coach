@@ -34,12 +34,14 @@ jobs:
 
       - name: Lint with Ruff
         run: |
-          ruff check backend/
-          ruff format --check backend/
+          cd backend
+          ruff check .
+          ruff format --check .
 
       - name: Run Pytest Suite
         run: |
-          pytest backend/tests
+          cd backend
+          pytest
 
   frontend:
     name: Frontend Typecheck & Build
